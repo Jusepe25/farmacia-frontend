@@ -112,9 +112,9 @@ function EncuentroModal({ grupo, onClose, onRefresh, showToast }) {
       const { accion, motivo } = acciones[r.id];
       try {
         if (accion === "dispensa") {
-          await api(`/api/v1/farmacia/recetas/${r.id}/confirmar-retiro`, { method: "PATCH" });
+          await api(`/api/v2/farmacia/recetas/${r.id}/confirmar-retiro`, { method: "PATCH" });
         } else {
-          await api(`/api/v1/farmacia/recetas/${r.id}/rechazar`, {
+          await api(`/api/v2/farmacia/recetas/${r.id}/rechazar`, {
             method: "PATCH",
             body: { motivo: motivo || "Rechazada manualmente" },
           });
@@ -288,7 +288,7 @@ function SoloCard({ receta, onRefresh, showToast }) {
   async function dispensar() {
     setProcesando(true);
     try {
-      await api(`/api/v1/farmacia/recetas/${receta.id}/confirmar-retiro`, { method: "PATCH" });
+      await api(`/api/v2/farmacia/recetas/${receta.id}/confirmar-retiro`, { method: "PATCH" });
       showToast("Medicamento dispensado", "ok");
       onRefresh();
     } catch (e) {
@@ -300,7 +300,7 @@ function SoloCard({ receta, onRefresh, showToast }) {
   async function rechazar() {
     setProcesando(true);
     try {
-      await api(`/api/v1/farmacia/recetas/${receta.id}/rechazar`, {
+      await api(`/api/v2/farmacia/recetas/${receta.id}/rechazar`, {
         method: "PATCH",
         body: { motivo: motivo || "Rechazada manualmente" },
       });
@@ -544,10 +544,10 @@ export default function FarmaciaApp() {
   const fetchCola = useCallback(async () => {
     try {
       const [rAcept, rRech, rRet, rVenc] = await Promise.all([
-        api("/api/v1/farmacia/recetas?estado=ACEPTADA&limit=100"),
-        api("/api/v1/farmacia/recetas?estado=RECHAZADA_SIN_STOCK&limit=1"),
-        api("/api/v1/farmacia/recetas?estado=RETIRADA_CONFIRMADA&limit=1"),
-        api("/api/v1/farmacia/recetas?estado=NO_RETIRADA_FARMACIA&limit=1"),
+        api("/api/v2/farmacia/recetas?estado=ACEPTADA&limit=100"),
+        api("/api/v2/farmacia/recetas?estado=RECHAZADA_SIN_STOCK&limit=1"),
+        api("/api/v2/farmacia/recetas?estado=RETIRADA_CONFIRMADA&limit=1"),
+        api("/api/v2/farmacia/recetas?estado=NO_RETIRADA_FARMACIA&limit=1"),
       ]);
       setCola(rAcept.recetas);
       setStats({
@@ -580,7 +580,7 @@ export default function FarmaciaApp() {
     setHistLoad(true);
     try {
       const qs = new URLSearchParams({ page: histPage, limit: 15, ...(histEstado && { estado: histEstado }) });
-      setHistData(await api(`/api/v1/farmacia/recetas?${qs}`));
+      setHistData(await api(`/api/v2/farmacia/recetas?${qs}`));
     } catch { setHistData(null); }
     finally { setHistLoad(false); }
   }, [histPage, histEstado]);
@@ -600,7 +600,7 @@ export default function FarmaciaApp() {
   async function submitSim() {
     setSending(true); setSimRes(null); setSimErr(null);
     try {
-      const d = await api("/api/v1/farmacia/recepcionar-receta", {
+      const d = await api("/api/v2/farmacia/recepcionar-receta", {
         method: "POST", body: { ...form, cantidad: Number(form.cantidad) },
       });
       setSimRes(d);
