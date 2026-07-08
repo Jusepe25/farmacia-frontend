@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4002";
 const TOKEN    = import.meta.env.VITE_API_TOKEN || "test_api_key_123";
-const POLL_MS  = 8000;
+const POLL_MS  = 3000;
 
 async function api(path, { method = "GET", body } = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -335,6 +335,9 @@ function SoloCard({ receta, onRefresh, showToast }) {
           <p className="mt-0.5 text-xs text-slate-400">
             {receta.dosis} · <span className="font-mono">{receta.cantidad} uds.</span>
           </p>
+          {receta.idEncuentroClinico && (
+            <p className="mt-0.5 font-mono text-[11px] text-slate-500 truncate">{receta.idEncuentroClinico}</p>
+          )}
         </div>
       </div>
 
@@ -533,6 +536,7 @@ export default function FarmaciaApp() {
   const [stats,    setStats]    = useState({ total: 0, aceptadas: 0, rechazadas: 0, retiradas: 0, vencidas: 0 });
   const [modalGrupo, setModalGrupo] = useState(null);
   const [toastMsg,   setToastMsg]   = useState(null);
+  const [refrescando, setRefrescando] = useState(false);
   const toastTimer = useRef(null);
 
   function showToast(msg, type = "ok") {
@@ -667,6 +671,20 @@ export default function FarmaciaApp() {
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
               Auto-sync {POLL_MS / 1000}s
             </span>
+            <button
+              onClick={async () => {
+                setRefrescando(true);
+                await Promise.all([fetchCola(), tab === "historial" ? fetchHist() : Promise.resolve()]);
+                setRefrescando(false);
+              }}
+              disabled={refrescando}
+              title="Buscar ahora en vez de esperar al auto-sync"
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs transition hover:bg-white/10 disabled:opacity-50">
+              <svg className={`h-3.5 w-3.5 ${refrescando ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+              </svg>
+              Buscar ahora
+            </button>
             <button onClick={checkHealth}
               className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs transition hover:bg-white/10">
               <span className={`h-2 w-2 rounded-full ${hm.dot}`} />
